@@ -34,9 +34,13 @@ module.exports = {
                             ['@babel/preset-env', {
                                 targets: {
                                     browsers: ['last 2 versions', 'not dead']
-                                }
+                                },
+                                modules: false,
+                                useBuiltIns: 'usage',
+                                corejs: 3
                             }]
-                        ]
+                        ],
+                        cacheDirectory: true
                     }
                 }
             },
@@ -56,15 +60,28 @@ module.exports = {
     },
     optimization: {
         minimizer: [
-            new CssMinimizerPlugin(),
+            new CssMinimizerPlugin({
+                minimizerOptions: {
+                    preset: [
+                        'default',
+                        {
+                            discardComments: { removeAll: true },
+                        },
+                    ],
+                },
+            }),
             new TerserPlugin({
                 terserOptions: {
                     format: {
                         comments: false,
                     },
                     compress: {
-                        drop_console: process.env.NODE_ENV === 'production'
-                    }
+                        drop_console: process.env.NODE_ENV === 'production',
+                        dead_code: true,
+                        drop_debugger: true,
+                        pure_funcs: ['console.log']
+                    },
+                    mangle: true
                 },
                 extractComments: false,
             }),
@@ -84,6 +101,7 @@ module.exports = {
                 }
             },
         },
+        runtimeChunk: 'single'
     },
     plugins: [
         new MiniCssExtractPlugin({
@@ -91,12 +109,25 @@ module.exports = {
         })
     ],
     resolve: {
-        extensions: ['.js', '.json']
+        extensions: ['.js', '.json'],
+        modules: [path.resolve(__dirname, 'node_modules')]
     },
     devtool: process.env.NODE_ENV !== 'production' ? 'source-map' : false,
     performance: {
         maxEntrypointSize: 512000,
         maxAssetSize: 512000,
         hints: process.env.NODE_ENV === 'production' ? 'warning' : false
+    },
+    stats: {
+        colors: true,
+        modules: true,
+        reasons: true,
+        errorDetails: true
+    },
+    cache: {
+        type: 'filesystem',
+        buildDependencies: {
+            config: [__filename]
+        }
     }
 };
