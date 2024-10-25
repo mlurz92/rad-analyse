@@ -1,0 +1,144 @@
+# Rad Analyse - Vollständige Verzeichnisstruktur
+
+```
+/srv/rad-analyse/
+├── .env                           # Produktions-Umgebungsvariablen
+├── .env.example                   # Beispiel-Umgebungskonfiguration
+├── .gitignore                     # Git-Ignore Konfiguration
+├── ecosystem.config.js            # PM2 Prozess-Konfiguration
+├── package.json                   # npm Projekt-Konfiguration
+├── package-lock.json              # npm Dependency-Lock
+├── README.md                      # Projektdokumentation
+├── robots.txt                     # Suchmaschinen-Konfiguration
+├── webpack.config.js              # Webpack Build-Konfiguration
+│
+├── logs/                          # Anwendungs-Logs
+│   ├── api-YYYY-MM-DD.log        # API-Anfragen Logs
+│   ├── error-YYYY-MM-DD.log      # Fehler-Logs
+│   ├── debug-YYYY-MM-DD.log      # Debug-Logs
+│   └── performance-YYYY-MM-DD.log # Performance-Logs
+│
+├── uploads/                       # Temporäres Upload-Verzeichnis
+│   └── .gitkeep
+│
+├── public/                        # Frontend-Dateien
+│   ├── index.html                # Haupt-HTML-Datei
+│   ├── favicon.svg               # Favicon
+│   ├── robots.txt               # Suchmaschinen-Direktiven
+│   │
+│   ├── css/                      # CSS-Quelldateien
+│   │   ├── style.css            # Hauptstildatei
+│   │   ├── table.css            # Tabellen-Stile
+│   │   ├── filter.css           # Filter-Stile
+│   │   └── upload.css           # Upload-Stile
+│   │
+│   ├── js/                       # JavaScript-Quelldateien
+│   │   ├── main.js              # Haupt-JavaScript
+│   │   ├── table.js             # Tabellen-Funktionalität
+│   │   ├── filter.js            # Filter-Funktionalität
+│   │   ├── upload.js            # Upload-Funktionalität
+│   │   └── optimizations.js     # Performance-Optimierungen
+│   │
+│   └── dist/                     # Kompilierte Assets
+│       ├── js/                   # Kompilierte JavaScript-Dateien
+│       │   ├── main.bundle.js
+│       │   ├── table.bundle.js
+│       │   ├── filter.bundle.js
+│       │   ├── upload.bundle.js
+│       │   └── optimizations.bundle.js
+│       │
+│       └── css/                  # Kompilierte CSS-Dateien
+│           └── styles.bundle.css
+│
+├── server/                        # Backend-Dateien
+│   ├── server.js                 # Haupt-Server-Datei
+│   ├── config.js                 # Server-Konfiguration
+│   ├── logging.js               # Logging-Funktionalität
+│   ├── cache.js                 # Cache-Management
+│   │
+│   └── database/                 # Datenbank-Dateien
+│       ├── database.sqlite       # SQLite Datenbank
+│       ├── schema.sql           # Datenbankschema
+│       └── migrations.sql       # Datenbank-Migrationen
+│
+├── scripts/                      # Wartungs-Skripte
+│   ├── backup.sh                # Backup-Skript
+│   ├── maintenance.sh           # Wartungs-Skript
+│   └── update.sh               # Update-Skript
+│
+└── nginx/                        # Nginx-Konfiguration
+    └── rad-analyse              # Nginx Site-Konfiguration
+
+# Externe Verzeichnisse
+/backup/rad-analyse/              # Backup-Verzeichnis
+└── YYYYMMDD_HHMMSS/             # Zeitgestempelte Backups
+    ├── database.sqlite          # Datenbank-Backup
+    └── logs.tar.gz             # Komprimierte Logs
+
+/etc/nginx/sites-available/      # Nginx Konfigurationen
+└── rad-analyse                 # Symlink zur Site-Konfiguration
+
+/var/log/rad-analyse/           # System Logs (Symlink zu /srv/rad-analyse/logs)
+```
+
+## Wichtige Verzeichnisse und ihre Berechtigungen
+
+```bash
+# Hauptverzeichnisse
+/srv/rad-analyse                 # 755 pi:pi
+/backup/rad-analyse             # 755 pi:pi
+/var/log/rad-analyse           # Symlink zu /srv/rad-analyse/logs
+
+# Datenverzeichnisse
+/srv/rad-analyse/uploads        # 755 pi:pi
+/srv/rad-analyse/logs          # 755 pi:pi
+/srv/rad-analyse/public/dist   # 755 pi:pi
+
+# Datenbankdateien
+server/database/database.sqlite # 660 pi:pi
+
+# Konfigurationsdateien
+.env                           # 640 pi:pi
+ecosystem.config.js            # 644 pi:pi
+nginx/rad-analyse             # 644 root:root
+```
+
+## Wichtige Dateien und ihre Funktionen
+
+1. **Konfigurationsdateien**
+   - `.env`: Produktions-Umgebungsvariablen
+   - `ecosystem.config.js`: PM2 Prozess-Management
+   - `webpack.config.js`: Asset-Kompilierung
+   - `nginx/rad-analyse`: Nginx Webserver-Konfiguration
+
+2. **Server-Dateien**
+   - `server/server.js`: Hauptanwendungsserver
+   - `server/config.js`: Server-Konfigurationsmanagement
+   - `server/logging.js`: Logging-System
+   - `server/cache.js`: Cache-Management
+
+3. **Datenbank-Dateien**
+   - `server/database/schema.sql`: Datenbankstruktur
+   - `server/database/migrations.sql`: Datenbankaktualisierungen
+   - `server/database/database.sqlite`: Hauptdatenbank
+
+4. **Frontend-Dateien**
+   - `public/index.html`: Hauptwebseite
+   - `public/js/*.js`: JavaScript-Module
+   - `public/css/*.css`: Styling-Dateien
+
+5. **Build-Dateien**
+   - `public/dist/js/*.bundle.js`: Kompilierte JavaScript-Dateien
+   - `public/dist/css/*.bundle.css`: Kompilierte CSS-Dateien
+
+6. **Wartungs-Skripte**
+   - `scripts/backup.sh`: Automatische Backups
+   - `scripts/maintenance.sh`: Systemwartung
+   - `scripts/update.sh`: Anwendungsaktualisierung
+
+Diese Verzeichnisstruktur ist optimiert für:
+- Klare Trennung von Zuständigkeiten
+- Einfache Wartung und Updates
+- Sichere Berechtigungsverwaltung
+- Effizientes Backup-Management
+- Optimale Performance
