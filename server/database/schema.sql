@@ -28,7 +28,7 @@ CREATE INDEX IF NOT EXISTS idx_combined_date_status ON studies(studiendatum, unt
 
 -- Trigger für automatische Aktualisierung von updated_at
 CREATE TRIGGER IF NOT EXISTS update_studies_timestamp 
-    AFTER UPDATE ON studies
+AFTER UPDATE ON studies
 BEGIN
     UPDATE studies SET updated_at = CURRENT_TIMESTAMP
     WHERE id = OLD.id;
@@ -56,7 +56,7 @@ SELECT * FROM studies_statistics;
 
 -- Trigger für die Aktualisierung der materialisierten View
 CREATE TRIGGER IF NOT EXISTS update_statistics_materialized
-    AFTER INSERT OR UPDATE OR DELETE ON studies
+AFTER INSERT ON studies
 BEGIN
     DELETE FROM studies_statistics_materialized;
     INSERT INTO studies_statistics_materialized
@@ -97,8 +97,8 @@ END;
 
 -- Aufräumen-Funktion für alte Einträge
 CREATE TRIGGER IF NOT EXISTS cleanup_old_studies
-    AFTER INSERT ON studies
-    WHEN (SELECT COUNT(*) FROM studies) > 1000000
+AFTER INSERT ON studies
+WHEN (SELECT COUNT(*) FROM studies) > 1000000
 BEGIN
     DELETE FROM studies 
     WHERE id IN (
