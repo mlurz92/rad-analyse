@@ -104,132 +104,70 @@ const createLogger = () => {
     return logger;
 };
 
-// Performance-Monitoring
-const startPerformanceMonitoring = (logger) => {
-    const interval = process.env.NODE_ENV === 'production' ? 300000 : 60000; // 5min prod, 1min dev
-    
-    setInterval(() => {
-        const usage = process.memoryUsage();
-        const cpuUsage = process.cpuUsage();
-        
-        logger.info('Performance metrics', {
-            memory: {
-                heapTotal: Math.round(usage.heapTotal / 1024 / 1024) + ' MB',
-                heapUsed: Math.round(usage.heapUsed / 1024 / 1024) + ' MB',
-                rss: Math.round(usage.rss / 1024 / 1024) + ' MB',
-                external: Math.round(usage.external / 1024 / 1024) + ' MB'
-            },
-            cpu: {
-                user: Math.round(cpuUsage.user / 1000000) + ' ms',
-                system: Math.round(cpuUsage.system / 1000000) + ' ms'
-            }
-        });
-    }, interval);
-};
-
-// Log-Rotation und Bereinigung
-const setupLogRotation = () => {
-    const maxAge = 30 * 24 * 60 * 60 * 1000; // 30 Tage
-    
-    setInterval(() => {
-        fs.readdir(config.logPath, (err, files) => {
-            if (err) {
-                console.error('Fehler beim Lesen des Log-Verzeichnisses:', err);
-                return;
-            }
-
-            const now = Date.now();
-            files.forEach(file => {
-                const filePath = path.join(config.logPath, file);
-                fs.stat(filePath, (err, stats) => {
-                    if (err) {
-                        console.error(`Fehler beim Lesen der Dateistatistik für ${file}:`, err);
-                        return;
-                    }
-
-                    if (now - stats.mtime.getTime() > maxAge) {
-                        fs.unlink(filePath, err => {
-                            if (err) {
-                                console.error(`Fehler beim Löschen der alten Log-Datei ${file}:`, err);
-                            }
-                        });
-                    }
-                });
-            });
-        });
-    }, 24 * 60 * 60 * 1000); // Täglich prüfen
-};
+const logger = createLogger();
 
 // Request-Logging Middleware
-const requestLogger = (logger) => {
-    return (req, res, next) => {
-        const start = process.hrtime();
+const requestLogger = (req, res, next) => {
+    const start = process.hrtime();
 
-        // Response beenden
-        const cleanup = () => {
-            res.removeListener('finish', logRequest);
-            res.removeListener('error', logError);
-            res.removeListener('close', cleanup);
-        };
-
-        // Request loggen
-        const logRequest = () => {
-            cleanup();
-            const [seconds, nanoseconds] = process.hrtime(start);
-            const duration = seconds * 1000 + nanoseconds / 1000000;
-
-            logger.info('Request completed', {
-                method: req.method,
-                url: req.url,
-                status: res.statusCode,
-                duration: `${duration.toFixed(3)}ms`,
-                userAgent: req.get('user-agent'),
-                ip: req.ip
-            });
-        };
-
-        // Fehler loggen
-        const logError = (error) => {
-            cleanup();
-            logger.error('Request error', {
-                method: req.method,
-                url: req.url,
-                error: error.message,
-                stack: error.stack
-            });
-        };
-
-        res.on('finish', logRequest);
-        res.on('error', logError);
-        res.on('close', cleanup);
-
-        next();
+    // Response beenden
+    const cleanup = () => {
+        res.removeListener('finish', logRequest);
+        res.removeListener('error', logError);
+        res.removeListener('close', cleanup);
     };
+
+    // Request loggen
+    const logRequest = () => {
+        cleanup();
+        const [seconds, nanoseconds] = process.hrtime(start);
+        const duration = seconds * 1000 + nanoseconds / 1000000;
+
+        logger.info('Request completed', {
+            method: req.method,
+            url: req.url,
+            status: res.statusCode,
+            duration: `${duration.toFixed(3)}ms`,
+            userAgent: req.get('user-agent'),
+            ip: req.ip
+        });
+    };
+
+    // Fehler loggen
+    const logError = (error) => {
+        cleanup();
+        logger.error('Request error', {
+            method: req.method,
+            url: req.url,
+            error: error.message,
+            stack: error.stack
+        });
+    };
+
+    res.on('finish', logRequest);
+    res.on('error', logError);
+    res.on('close', cleanup);
+
+    next();
 };
 
 // Error-Logging Middleware
-const errorLogger = (logger) => {
-    return (err, req, res, next) => {
-        logger.error('Application error', {
-            error: err.message,
-            stack: err.stack,
-            method: req.method,
-            url: req.url,
-            body: req.body,
-            query: req.query,
-            params: req.params,
-            ip: req.ip
-        });
-        next(err);
-    };
+const errorLogger = (err, req, res, next) => {
+    logger.error('Application error', {
+        error: err.message,
+        stack: err.stack,
+        method: req.method,
+        url: req.url,
+        body: req.body,
+        query: req.query,
+        params: req.params,
+        ip: req.ip
+    });
+    next(err);
 };
-
-const logger = createLogger();
-startPerformanceMonitoring(logger);
-setupLogRotation();
 
 module.exports = {
     logger,
-    requestLogger: requestLogger(logger),
-    errorLogger: errorLogger(logger)
+    requestLogger,
+    errorLogger
 };
