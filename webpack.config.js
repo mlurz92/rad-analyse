@@ -30,7 +30,13 @@ module.exports = {
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: ['@babel/preset-env']
+                        presets: [
+                            ['@babel/preset-env', {
+                                targets: {
+                                    browsers: ['last 2 versions', 'not dead']
+                                }
+                            }]
+                        ]
                     }
                 }
             },
@@ -84,6 +90,9 @@ module.exports = {
             filename: 'css/[name].bundle.css'
         })
     ],
+    resolve: {
+        extensions: ['.js', '.json']
+    },
     devtool: process.env.NODE_ENV !== 'production' ? 'source-map' : false,
     performance: {
         maxEntrypointSize: 512000,
