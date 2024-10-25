@@ -26,8 +26,13 @@ function validateConfig(config) {
     paths.forEach(pathKey => {
         const dir = path.dirname(config[pathKey]);
         try {
+            // Verzeichnis erstellen falls nicht vorhanden
+            if (!require('fs').existsSync(dir)) {
+                require('fs').mkdirSync(dir, { recursive: true });
+            }
             require('fs').accessSync(dir, require('fs').constants.W_OK);
         } catch (err) {
+            console.error(`Fehler beim Zugriff auf Verzeichnis ${dir}:`, err);
             throw new Error(`Verzeichnis für ${pathKey} (${dir}) ist nicht beschreibbar`);
         }
     });
