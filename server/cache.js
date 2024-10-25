@@ -5,10 +5,11 @@ const { logger } = require('./logging');
 class CacheManager {
     constructor() {
         this.cache = new NodeCache({
-            stdTTL: 3600, // 1 Stunde Standard-TTL
-            checkperiod: 600, // Alle 10 Minuten prüfen
+            stdTTL: config.cacheTTL,
+            checkperiod: 600,
             useClones: false,
-            deleteOnExpire: true
+            deleteOnExpire: true,
+            maxKeys: 1000
         });
 
         this.statistics = {
@@ -29,10 +30,10 @@ class CacheManager {
         // Statistik-Reporting
         setInterval(() => {
             this.reportStatistics();
-        }, 300000); // Alle 5 Minuten
+        }, 300000);
     }
 
-    async get(key, fetchFunction, ttl = 3600) {
+    async get(key, fetchFunction, ttl = config.cacheTTL) {
         let value = this.cache.get(key);
         
         if (value !== undefined) {
@@ -52,7 +53,7 @@ class CacheManager {
         }
     }
 
-    set(key, value, ttl = 3600) {
+    set(key, value, ttl = config.cacheTTL) {
         this.statistics.sets++;
         return this.cache.set(key, value, ttl);
     }
@@ -66,7 +67,6 @@ class CacheManager {
         logger.info('Cache flushed');
     }
 
-    // Statistiken aktualisieren und loggen
     reportStatistics() {
         const stats = this.cache.getStats();
         const hitRatio = (this.statistics.hits / (this.statistics.hits + this.statistics.misses)) * 100;
@@ -81,18 +81,17 @@ class CacheManager {
         });
     }
 
-    // Cache-Middleware für Express
-    middleware(options = {}) {
+    middleware() {
         return async (req, res, next) => {
-            if (req.method !== 'GET') {
+            if (req.method !== 'GET' || !config.cacheEnabled) {
                 return next();
             }
 
             const key = `${req.originalUrl || req.url}`;
             try {
                 const cachedResponse = await this.get(key, async () => {
-                    const originalSend = res.send.bind(res);
                     let responseBody;
+                    const originalSend = res.send.bind(res);
 
                     res.send = (body) => {
                         responseBody = body;
@@ -112,9 +111,8 @@ class CacheManager {
                         body: responseBody,
                         headers: res.getHeaders()
                     };
-                }, options.ttl);
+                }, config.cacheTTL);
 
-                // Cache-Headers setzen
                 res.set('X-Cache', 'HIT');
                 Object.entries(cachedResponse.headers).forEach(([key, value]) => {
                     res.set(key, value);
