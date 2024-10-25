@@ -1,5 +1,19 @@
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
+
+function ensureDirectory(dir) {
+    try {
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true, mode: 0o755 });
+        }
+        fs.accessSync(dir, fs.constants.W_OK);
+        return true;
+    } catch (err) {
+        console.error(`Fehler beim Erstellen/Zugriff auf Verzeichnis ${dir}:`, err);
+        return false;
+    }
+}
 
 function validateConfig(config) {
     const required = [
@@ -21,19 +35,12 @@ function validateConfig(config) {
         throw new Error('PORT muss eine gültige Portnummer sein (1-65535)');
     }
 
-    // Pfade validieren
+    // Pfade validieren und erstellen
     const paths = ['DB_PATH', 'UPLOAD_PATH', 'LOG_PATH'];
     paths.forEach(pathKey => {
         const dir = path.dirname(config[pathKey]);
-        try {
-            // Verzeichnis erstellen falls nicht vorhanden
-            if (!require('fs').existsSync(dir)) {
-                require('fs').mkdirSync(dir, { recursive: true });
-            }
-            require('fs').accessSync(dir, require('fs').constants.W_OK);
-        } catch (err) {
-            console.error(`Fehler beim Zugriff auf Verzeichnis ${dir}:`, err);
-            throw new Error(`Verzeichnis für ${pathKey} (${dir}) ist nicht beschreibbar`);
+        if (!ensureDirectory(dir)) {
+            throw new Error(`Verzeichnis für ${pathKey} (${dir}) konnte nicht erstellt/verwendet werden`);
         }
     });
 
