@@ -1,0 +1,42 @@
+{
+  "name": "rad_analyse",
+  "version": "1.0.0",
+  "description": "Radiologie Analyse Tool für Metadaten von Untersuchungen",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js",
+    "build": "webpack --config webpack.config.js --mode production",
+    "watch": "webpack --watch --config webpack.config.js --mode development",
+    "lint": "eslint .",
+    "test": "jest",
+    "backup": "./scripts/backup.sh",
+    "update": "./scripts/update.sh"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "multer": "^1.4.5-lts.1",
+    "morgan": "^1.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "compression": "^1.7.4",
+    "helmet": "^7.0.0",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.4",
+    "css-loader": "^6.8.1",
+    "mini-css-extract-plugin": "^2.7.6",
+    "css-minimizer-webpack-plugin": "^5.0.1",
+    "terser-webpack-plugin": "^5.3.9",
+    "style-loader": "^3.3.3",
+    "eslint": "^8.54.0",
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

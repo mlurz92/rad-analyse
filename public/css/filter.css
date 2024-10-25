@@ -1,0 +1,239 @@
+.filter-menu {
+    position: fixed;
+    display: none;
+    max-height: 400px;
+    min-width: 200px;
+    background: var(--primary-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    box-shadow: var(--glass-shadow);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+}
+
+.filter-menu-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-search {
+    width: 100%;
+    padding: 0.5rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: border-color 0.3s;
+}
+
+.filter-search:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 10px var(--glow-color);
+}
+
+.filter-button-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.select-all,
+.select-none {
+    padding: 0.25rem 0.5rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.select-all:hover,
+.select-none:hover {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.filter-options {
+    padding: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-color) var(--glass-bg);
+}
+
+.filter-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.filter-options::-webkit-scrollbar-track {
+    background: var(--glass-bg);
+}
+
+.filter-options::-webkit-scrollbar-thumb {
+    background-color: var(--accent-color);
+    border-radius: 3px;
+}
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    border-radius: 4px;
+    user-select: none;
+}
+
+.filter-option:hover {
+    background: var(--glass-bg);
+}
+
+.filter-option input[type="checkbox"] {
+    margin-right: 0.75rem;
+    accent-color: var(--accent-color);
+}
+
+.filter-option span {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.filter-option .count {
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    min-width: 30px;
+    text-align: right;
+}
+
+.filter-actions {
+    padding: 0.75rem;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.filter-actions button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.apply-filter {
+    background: var(--accent-color);
+    color: white;
+}
+
+.apply-filter:hover {
+    box-shadow: 0 0 10px var(--glow-color);
+}
+
+.clear-filter {
+    background: var(--glass-bg);
+    color: var(--text-primary);
+}
+
+.clear-filter:hover {
+    background: var(--error-color);
+}
+
+.direct-filter-input {
+    width: calc(100% - 48px);
+    padding: 0.5rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.direct-filter-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 10px var(--glow-color);
+}
+
+th.filtered .filter-button {
+    color: var(--accent-color);
+    opacity: 1;
+}
+
+/* Active Filter Indikator */
+.active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.active-filter {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    background: var(--accent-color);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    gap: 0.5rem;
+}
+
+.active-filter .remove {
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+.active-filter .remove:hover {
+    opacity: 1;
+}
+
+/* Responsive Anpassungen */
+@media (max-width: 768px) {
+    .filter-menu {
+        max-width: 90vw;
+        margin-left: 5vw;
+    }
+
+    .filter-option {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .filter-actions {
+        flex-direction: column;
+    }
+
+    .filter-actions button {
+        width: 100%;
+    }
+}
+
+/* Animationen */
+@keyframes filterMenuShow {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.filter-menu.show {
+    display: block;
+    animation: filterMenuShow 0.2s ease-out;
+}

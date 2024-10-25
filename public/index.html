@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rad Analyse - Radiologie Analysewerkzeug</title>
+    <meta name="description" content="Tool zur Analyse radiologischer Untersuchungsdaten">
+    <link rel="stylesheet" href="/dist/css/styles.bundle.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+</head>
+<body>
+    <nav class="navigation glass-panel">
+        <div class="nav-content">
+            <h1>Rad Analyse</h1>
+            <div class="nav-links">
+                <button class="nav-button glass-button active" data-section="untersuchungen">Untersuchungen</button>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section id="untersuchungen" class="section active">
+            <div class="search-container glass-panel">
+                <input type="text" id="globalSearch" class="search-input" placeholder="Globale Suche...">
+            </div>
+
+            <div class="upload-container">
+                <div id="uploadDropzone" class="upload-dropzone glass-panel">
+                    <p>JSON-Dateien hier ablegen oder klicken zum Auswählen</p>
+                    <p class="upload-info">Maximale Dateigröße: 50MB</p>
+                    <input type="file" id="fileInput" multiple accept="application/json" hidden>
+                    <div class="upload-progress">
+                        <div class="upload-progress-bar">
+                            <div class="upload-progress-bar-fill"></div>
+                        </div>
+                        <p class="upload-status"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container glass-panel">
+                <table id="studiesTable">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <button id="backToTop" class="back-to-top glass-button" title="Nach oben">↑</button>
+        </section>
+    </main>
+
+    <div id="errorMessage" class="error-message glass-panel"></div>
+    <div id="columnMenu" class="column-menu glass-panel"></div>
+
+    <script type="module" src="/dist/js/main.bundle.js"></script>
+    <script type="module" src="/dist/js/vendors.bundle.js"></script>
+</body>
+</html>
