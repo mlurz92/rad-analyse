@@ -280,4 +280,4 @@ Bei Problemen:
 
 ---
 
-Weitere Informationen und Updates finden Sie im Repository: https://github.com/mlurz92/rad-analyse.git
+Weitere Informationen und Updates finden Sie im Repository: https://github.com/mlurz92/rad-analyse.git   
