@@ -44,3 +44,6 @@ uploads/
 
 # Backup
 backup/
+
+# PM2
+ecosystem.config.js
