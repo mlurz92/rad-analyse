@@ -1,90 +1,103 @@
-# Rad Analyse - Installationsanleitung für Einsteiger
+# Rad Analyse - Vollständige Installationsanleitung
 
-Diese Anleitung führt Sie Schritt für Schritt durch die Installation der Rad-Analyse-Anwendung auf einem Raspberry Pi 4. Die Anwendung dient zur Verwaltung und Analyse radiologischer Untersuchungsdaten und wird neben einer bestehenden Wochenplan-Anwendung installiert.
+Eine optimierte Web-Anwendung zur Analyse radiologischer Untersuchungsdaten. Diese Anleitung führt auch unerfahrene Benutzer sicher durch die Installation im Dual-Betrieb mit einer bestehenden Wochenplan-Anwendung.
 
-## Voraussetzungen
+## Systemvoraussetzungen
 
 ### Hardware
 - Raspberry Pi 4 (mindestens 4GB RAM)
 - MicroSD-Karte (mindestens 32GB)
-- Netzwerkanschluss (vorzugsweise LAN)
-- Stromversorgung (mindestens 3A)
+- Ethernet-Verbindung empfohlen
+- Netzteil mit mindestens 3A
 
-### Software & Dienste
-- FRITZ!Box 6660 mit MyFRITZ!-Konto
+### Software-Voraussetzungen
 - Raspberry Pi OS Lite (64-bit)
-- Bestehendes SSL-Zertifikat für raspberrypi.hyg6zkbn2mykr1go.myfritz.net
+- FRITZ!Box 6660 (konfiguriert mit MyFRITZ!)
+- SSL-Zertifikat für raspberrypi.hyg6zkbn2mykr1go.myfritz.net
 
-### Kenntnisse
-- Grundlegende Terminal-Bedienung
-- Zugriff auf die FRITZ!Box-Verwaltung
+### Node.js-Version
+```bash
+# Node.js Version 18 oder höher ist erforderlich
+node --version  # Sollte v18.0.0 oder höher anzeigen
+```
 
-## 1. Grundinstallation Raspberry Pi
+## Installation
 
-Wenn Sie bereits einen funktionierenden Raspberry Pi mit der Wochenplan-Anwendung haben, können Sie direkt zu Schritt 2 springen.
-
+### 1. System vorbereiten
 ```bash
 # System aktualisieren
 sudo apt update && sudo apt upgrade -y
 
-# Benötigte Pakete installieren
-sudo apt install -y git curl wget build-essential sqlite3
+# Erforderliche Pakete installieren
+sudo apt install -y git curl wget build-essential nginx sqlite3 certbot python3-certbot-nginx
 ```
 
-## 2. Projektverzeichnis vorbereiten
-
+### 2. Node.js installieren
 ```bash
-# Verzeichnisse erstellen
+# Node.js Repository hinzufügen und installieren
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# NPM-Konfiguration
+mkdir -p ~/.npm-global
+npm config set prefix '~/.npm-global'
+echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+
+# PM2 global installieren
+npm install -g pm2
+```
+
+### 3. Verzeichnisstruktur erstellen
+```bash
+# Hauptverzeichnisse erstellen
 sudo mkdir -p /srv/rad-analyse
-sudo mkdir -p /var/log/rad-analyse
+sudo mkdir -p /srv/rad-analyse/logs
+sudo mkdir -p /srv/rad-analyse/uploads
+sudo mkdir -p /srv/rad-analyse/server/database
 sudo mkdir -p /backup/rad-analyse
 
 # Berechtigungen setzen
 sudo chown -R pi:pi /srv/rad-analyse
-sudo chown -R pi:pi /var/log/rad-analyse
 sudo chown -R pi:pi /backup/rad-analyse
+sudo chmod -R 755 /srv/rad-analyse
+sudo chmod -R 755 /backup/rad-analyse
 ```
 
-## 3. Repository klonen und Abhängigkeiten installieren
-
+### 4. Anwendung installieren
 ```bash
 # Repository klonen
 cd /srv
 git clone https://github.com/mlurz92/rad-analyse.git rad-analyse
 cd rad-analyse
 
-# Node.js installieren (falls noch nicht vorhanden)
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# Globale Pakete installieren
-mkdir ~/.npm-global
-npm config set prefix '~/.npm-global'
-echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
-source ~/.bashrc
-npm install -g pm2
-
-# Projektabhängigkeiten installieren
+# Abhängigkeiten installieren
 npm install
+
+# Umgebungsvariablen konfigurieren
+cp .env.example .env
+nano .env
 ```
 
-## 4. Konfigurationsdateien erstellen
-
-### .env-Datei erstellen
-```bash
-cat > .env << EOL
+Die .env-Datei sollte folgende Werte enthalten:
+```env
 PORT=3002
 NODE_ENV=production
+HOST=localhost
 DB_PATH=/srv/rad-analyse/server/database/database.sqlite
 UPLOAD_PATH=/srv/rad-analyse/uploads
-LOG_PATH=/var/log/rad-analyse
+LOG_PATH=/srv/rad-analyse/logs
 MAX_UPLOAD_SIZE=52428800
 LOG_LEVEL=info
-EOL
+CACHE_ENABLED=true
+CACHE_TTL=3600
+MAX_CONNECTIONS=100
+QUERY_LIMIT=200
 ```
 
-### Nginx-Konfiguration
+### 5. Nginx konfigurieren
 ```bash
+# Nginx-Konfiguration erstellen
 sudo nano /etc/nginx/sites-available/rad-analyse
 ```
 
@@ -99,20 +112,47 @@ server {
     
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_prefer_server_ciphers on;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+    ssl_session_timeout 10m;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_tickets off;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
     
     # rad-analyse Konfiguration
     location /rad-analyse/ {
         proxy_pass http://localhost:3002/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
         client_max_body_size 50M;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
     }
 
     # Bestehende wochenplan-radiologie Konfiguration
     location /wochenplan-radiologie/ {
         proxy_pass http://localhost:3003/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 ```
@@ -124,45 +164,38 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-## 5. Datenbank einrichten
-
+### 6. Datenbank initialisieren
 ```bash
-# Datenbankverzeichnis erstellen
-mkdir -p server/database
-
-# Schema initialisieren
+# Schema anwenden
 sqlite3 server/database/database.sqlite < server/database/schema.sql
 
 # Berechtigungen setzen
-chmod 640 server/database/database.sqlite
+chmod 660 server/database/database.sqlite
 chown pi:pi server/database/database.sqlite
 ```
 
-## 6. Frontend Build erstellen
-
+### 7. Frontend bauen
 ```bash
 # Build durchführen
 npm run build
+
+# Build-Verzeichnis prüfen
+ls -la public/dist/
 ```
 
-## 7. Dienste einrichten
-
+### 8. PM2 konfigurieren
 ```bash
-# PM2 Prozess erstellen
-pm2 start server/server.js --name rad-analyse \
-    --max-memory-restart 1G \
-    --node-args="--max-old-space-size=512" \
-    --log /var/log/rad-analyse/app.log
+# PM2 Ecosystem-Datei laden
+pm2 start ecosystem.config.js --env production
 
-# PM2 Autostart konfigurieren
+# PM2 für Autostart konfigurieren
 pm2 save
 pm2 startup
 ```
 
-## 8. Backup und Wartung einrichten
-
+### 9. Automatische Backups einrichten
 ```bash
-# Skripte ausführbar machen
+# Backup-Skripte ausführbar machen
 chmod +x scripts/*.sh
 
 # Cronjobs einrichten
@@ -170,15 +203,10 @@ chmod +x scripts/*.sh
 (crontab -l 2>/dev/null; echo "0 2 * * 0 [ \$(date +\%d) -le 7 ] && /srv/rad-analyse/scripts/maintenance.sh") | crontab -
 ```
 
-## 9. Logrotation konfigurieren
-
+### 10. Logrotation konfigurieren
 ```bash
-sudo nano /etc/logrotate.d/rad-analyse
-```
-
-Fügen Sie folgende Konfiguration ein:
-```
-/var/log/rad-analyse/*.log {
+sudo tee /etc/logrotate.d/rad-analyse << EOL
+/srv/rad-analyse/logs/*.log {
     daily
     rotate 14
     compress
@@ -190,58 +218,58 @@ Fügen Sie folgende Konfiguration ein:
         pm2 reloadLogs
     endscript
 }
+EOL
 ```
-
-## 10. Anwendung testen
-
-1. Öffnen Sie im Browser: https://raspberrypi.hyg6zkbn2mykr1go.myfritz.net/rad-analyse/
-2. Sie sollten die Benutzeroberfläche sehen
-3. Testen Sie den Upload einer JSON-Datei (Beispieldatei im Repository)
 
 ## Fehlersuche
 
-### Logs überprüfen
+### 1. Server startet nicht
 ```bash
-# PM2 Logs
+# PM2 Logs prüfen
 pm2 logs rad-analyse
 
-# Nginx Logs
-sudo tail -f /var/log/nginx/error.log
-sudo tail -f /var/log/nginx/access.log
-
-# Anwendungslogs
-tail -f /var/log/rad-analyse/app.log
+# Manueller Start für Debug-Output
+cd /srv/rad-analyse
+NODE_ENV=production node server/server.js
 ```
 
-### Häufige Probleme
+### 2. 502 Bad Gateway
+```bash
+# Nginx Logs prüfen
+sudo tail -f /var/log/nginx/error.log
 
-1. **Seite nicht erreichbar**
-   ```bash
-   sudo systemctl status nginx
-   pm2 status
-   ```
+# Nginx neustarten
+sudo systemctl restart nginx
 
-2. **Upload funktioniert nicht**
-   ```bash
-   # Berechtigungen prüfen
-   ls -la /srv/rad-analyse/uploads
-   # Speicherplatz prüfen
-   df -h
-   ```
+# PM2 Prozess neustarten
+pm2 restart rad-analyse
+```
 
-3. **Datenbank-Fehler**
-   ```bash
-   # Berechtigungen prüfen
-   ls -la /srv/rad-analyse/server/database
-   # Datenbankintegrität prüfen
-   sqlite3 /srv/rad-analyse/server/database/database.sqlite "PRAGMA integrity_check;"
-   ```
+### 3. Build-Fehler
+```bash
+# Build-Abhängigkeiten prüfen
+npm install
+
+# Cache leeren und neu bauen
+rm -rf node_modules
+rm -rf public/dist
+npm install
+npm run build
+```
+
+### 4. Berechtigungsprobleme
+```bash
+# Berechtigungen neu setzen
+sudo chown -R pi:pi /srv/rad-analyse
+sudo chmod -R 755 /srv/rad-analyse
+sudo chmod 660 server/database/database.sqlite
+```
 
 ## Wartung
 
-### Systemaktualisierung
+### System aktualisieren
 ```bash
-# System aktualisieren
+# System-Updates
 sudo apt update && sudo apt upgrade -y
 
 # Anwendung aktualisieren
@@ -254,25 +282,51 @@ pm2 restart rad-analyse
 
 ### Backup wiederherstellen
 ```bash
-# Zum neuesten Backup wechseln
+# Neuestes Backup finden
 cd /backup/rad-analyse/$(ls -t /backup/rad-analyse | head -1)
 
 # Datenbank wiederherstellen
 sqlite3 /srv/rad-analyse/server/database/database.sqlite ".restore 'database.sqlite'"
 ```
 
-## Support
+## Monitoring
+
+### Performance überwachen
+```bash
+# PM2 Monitoring
+pm2 monit
+
+# System-Ressourcen
+htop
+
+# Festplattennutzung
+df -h
+```
+
+### Logs prüfen
+```bash
+# Anwendungslogs
+tail -f /srv/rad-analyse/logs/app.log
+
+# Error-Logs
+tail -f /srv/rad-analyse/logs/error.log
+
+# Nginx-Logs
+sudo tail -f /var/log/nginx/error.log
+```
+
+## Support & Hilfe
 
 Bei Problemen:
-1. Überprüfen Sie die Logs (siehe Fehlersuche)
-2. Kontrollieren Sie die Systemressourcen (`htop`, `df -h`)
-3. Repository-Issues durchsuchen
-4. Neues Issue erstellen mit:
-   - Problembeschreibung
-   - Relevante Logauszüge
-   - Systemzustand
+1. Prüfen Sie die relevanten Logs (siehe oben)
+2. Überprüfen Sie die Systemressourcen
+3. Konsultieren Sie die [Issue-Seite](https://github.com/mlurz92/rad-analyse/issues)
+4. Erstellen Sie ein neues Issue mit:
+   - Detaillierter Problembeschreibung
+   - Relevanten Log-Auszügen
+   - Systeminformationen
 
-## Lizenz & Anmerkungen
+## Lizenz
 
 - Entwickelt für internen Gebrauch
 - Alle Rechte vorbehalten
@@ -280,4 +334,4 @@ Bei Problemen:
 
 ---
 
-Weitere Informationen und Updates finden Sie im Repository: https://github.com/mlurz92/rad-analyse.git   
+Repository: https://github.com/mlurz92/rad-analyse.git
