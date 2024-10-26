@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /uploads/
+Disallow: /api/
+Disallow: /logs/
+Allow: /
+Sitemap: https://raspberrypi.hyg6zkbn2mykr1go.myfritz.net/rad-analyse/sitemap.xml
+
+# Verhindere Zugriff auf sensible Bereiche
+Disallow: /*?*
+Disallow: /*/database/
+Disallow: /*/config/
+Disallow: /backup/

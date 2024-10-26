@@ -1,0 +1,62 @@
+rad-analyse/
+├── .env.example
+├── .gitignore
+├── README.md
+├── package.json
+├── webpack.config.js
+├── ecosystem.config.js
+├── robots.txt
+├── server/
+│   ├── cache.js
+│   ├── config.js
+│   ├── logging.js
+│   ├── database/
+│   │   ├── schema.sql
+│   │   └── migrations.sql
+│   └── routes/
+│       ├── api.js
+│       └── upload.js
+├── src/
+│   ├── js/
+│   │   ├── main.js
+│   │   ├── table.js
+│   │   ├── filter.js
+│   │   ├── upload.js
+│   │   └── optimizations.js
+│   └── css/
+│       ├── style.css
+│       ├── table.css
+│       ├── filter.css
+│       └── upload.css
+├── public/
+│   ├── index.html
+│   ├── favicon.svg
+│   ├── robots.txt
+│   └── dist/
+│       ├── js/
+│       │   ├── main.bundle.js
+│       │   ├── table.bundle.js
+│       │   ├── filter.bundle.js
+│       │   ├── upload.bundle.js
+│       │   ├── optimizations.bundle.js
+│       │   ├── vendors.bundle.js
+│       │   └── runtime.bundle.js
+│       └── css/
+│           ├── main.bundle.css
+│           ├── table.bundle.css
+│           ├── filter.bundle.css
+│           ├── upload.bundle.css
+│           └── optimizations.bundle.css
+├── logs/
+│   ├── access.log
+│   ├── combined.log
+│   ├── error.log
+│   └── api-YYYY-MM-DD.log
+├── uploads/
+│   └── .gitkeep
+├── scripts/
+│   ├── backup.sh
+│   ├── maintenance.sh
+│   └── update.sh
+└── nginx/
+    └── rad-analyse

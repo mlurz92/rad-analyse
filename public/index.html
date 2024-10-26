@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rad Analyse - Radiologie Analysewerkzeug</title>
+    <meta name="description" content="Tool zur Analyse radiologischer Untersuchungsdaten">
+    <link rel="stylesheet" href="/rad-analyse/dist/css/main.bundle.css">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+</head>
+<body>
+    <nav class="navigation glass-panel">
+        <div class="nav-content">
+            <h1>Rad Analyse</h1>
+            <div class="nav-links">
+                <button class="nav-button glass-button active" data-section="untersuchungen">Untersuchungen</button>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section id="untersuchungen" class="section active">
+            <div class="search-container glass-panel">
+                <input type="text" id="globalSearch" class="search-input" placeholder="Globale Suche...">
+            </div>
+
+            <div class="upload-container">
+                <div id="uploadDropzone" class="upload-dropzone glass-panel">
+                    <div class="upload-icon">↑</div>
+                    <p>JSON-Dateien hier ablegen oder klicken zum Auswählen</p>
+                    <p class="upload-info">Maximale Dateigröße: 50MB</p>
+                    <input type="file" id="fileInput" multiple accept="application/json" hidden>
+                    <div class="upload-progress">
+                        <div class="upload-progress-bar">
+                            <div class="upload-progress-bar-fill"></div>
+                        </div>
+                        <p class="upload-status"></p>
+                    </div>
+                    <div class="upload-file-list"></div>
+                </div>
+            </div>
+
+            <div class="table-container glass-panel">
+                <table id="studiesTable">
+                    <thead>
+                        <tr>
+                            <th data-column="modalitaet">Modalität</th>
+                            <th data-column="studiendatum">Studiendatum</th>
+                            <th data-column="studienbeschreibung">Studienbeschreibung</th>
+                            <th data-column="anfragename">Anfragename</th>
+                            <th data-column="institution">Institution</th>
+                            <th data-column="anfragende_abteilung">Anfragende Abteilung</th>
+                            <th data-column="anfragender_arzt">Anfragender Arzt</th>
+                            <th data-column="ueberweiser">Überweiser</th>
+                            <th data-column="befundverfasser">Berfundverfasser</th>
+                            <th data-column="patientengeschlecht">Patientengeschlecht</th>
+                            <th data-column="patientenalter">Patientenalter</th>
+                            <th data-column="diagnose">Diagnose</th>
+                            <th data-column="untersuchungsstatus">Untersuchungsstatus</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <button id="backToTop" class="back-to-top glass-button" title="Nach oben">↑</button>
+        </section>
+    </main>
+
+    <div id="errorMessage" class="error-message glass-panel"></div>
+    <div id="columnMenu" class="column-menu glass-panel"></div>
+
+    <script src="/dist/js/runtime.bundle.js"></script>
+    <script src="/dist/js/vendors.bundle.js"></script>
+    <script src="/dist/js/main.bundle.js"></script>
+</body>
+</html>
